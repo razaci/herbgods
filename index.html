@@ -196,16 +196,12 @@ function save(){localStorage.setItem('supernaturalGodsState',JSON.stringify(stat
 function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
 function setApp(html,showBack=true){document.getElementById('app').innerHTML=html;document.getElementById('back').style.display=showBack?'block':'none';scrollTo(0,0)}
 function homeNav(){return `<div class="nav">
-<button onclick="openLogs()"><b>LOGBOOKS</b><small>Hauntings, visions, paradoxes, signals and encounters.</small></button>
-<button onclick="openJournals()"><b>JOURNALS</b><small>Private crew writings and personal observations.</small></button>
-<button onclick="openPosts()"><b>POSTS</b><small>ARK-9, Haven-9 and Bazaar message boards.</small></button>
-<button onclick="openOccurrences()"><b>STRANGE OCCURRENCES</b><small>Browse the archive by supernatural type.</small></button>
-<button onclick="openGods()"><b>THE GODS</b><small>Recurring entities, symbols and impossible patterns.</small></button>
-<button onclick="openEvidenceLab()"><b>EVIDENCE</b><small>Connect clues, spend Research, and build hypotheses.</small></button>
-<button onclick="openInvestigation()"><b>INVESTIGATE</b><small>Play the daily supernatural detective loop.</small></button>
-<button onclick="openSecretDeck()"><b>DECK Ø</b><small>Impossible rooms appearing outside the ship plans.</small></button><button onclick="openSystemsHub()"><b>SYSTEMS</b><small>See how every archive menu feeds the adventure.</small></button><button onclick="openDecisionTreeHub()"><b>HERBAL R-PANEL</b><small>Problem → herb/support → preparation → supply/lore, with 200 references.</small></button><button onclick="openPsycheHub()"><b>PSYCHE ARCHIVE</b><small>50 archetypes, Jungian shadow workbench, crew profiles, and deep psyche decisions.</small></button><button onclick="openMatrixHub()"><b>VEIL MATRIX</b><small>Enter falling data rain, trace synthetic IPs, decode packets, and unlock network nodes.</small></button><button onclick="openHerbGods()"><b>HERB GODS</b><small>Bright cosmic zodiac herb deities, alignments, relics, and symbolic formulas.</small></button><button onclick="openAstroBioHub()"><b>STAR & RHYTHM</b><small>Enter birth info for horoscope-style symbolism, biorhythms, lunar phase, and zodiac lore.</small></button><button onclick="openOracleEngine()"><b>ORACLE ENGINE</b><small>Cross-link your profiles, Herb Gods, evidence and secret rooms into missions.</small></button><button onclick="openCaseGenerator()"><b>ANOMALY CASES</b><small>Generate new supernatural cases and choose persistent conclusions.</small></button><button onclick="openWorldState()"><b>THE SHIP REMEMBERS</b><small>Watch the Archive mutate and uncover the conditions for Room 091.</small></button><button onclick="openPlayerProfile()"><b>WHO IS THE PLAYER?</b><small>The hidden model quietly learns from your accumulated moves and motives.</small></button><button onclick="openProfileVault()"><b>BLACK BOX PROFILE</b><small>Read the deeper immutable-in-game ledger and derived behavior signals.</small></button>
-<button onclick="openAdventureMap()"><b>ADVENTURE</b><small>Eight-chapter campaign across ninety secret rooms.</small></button>
-
+<button onclick="openOracleEngine()"><b>THE ORACLE</b><small>Omens, missions, Star & Rhythm, and the hidden player model.</small></button>
+<button onclick="openCaseGenerator()"><b>VEIL CASES</b><small>Investigations, evidence, journals, posts, and supernatural conclusions.</small></button>
+<button onclick="openSecretDeck()"><b>DECK Ø</b><small>Secret rooms, relics, entities, exploration, and Room 091.</small></button>
+<button onclick="openPsycheHub()"><b>THE INNER ARCHIVE</b><small>Psyche profiles, shadow work, motives, and Black Box profiling.</small></button>
+<button onclick="openHerbGods()"><b>COSMIC GARDEN</b><small>Herb Gods, zodiac lore, herbal codex, formulas, and alignments.</small></button>
+<button onclick="openMatrixHub()"><b>THE SIGNAL</b><small>Veil Matrix, falling data rain, network traces, and hidden routes.</small></button>
 </div>`}
 function goHome(){
  setApp(`<section class="hero"><div class="brand">SUPERNATURAL GODS<small>THE VEIL ARCHIVE // ARK-9</small></div><div class="quote">“Every log is a prayer that we were here.” — THE FIRST INSCRIPTION</div>${homeNav()}</section><main class="main"><div class="section"><h2>RECENT ENTRIES</h2><div class="grid">${DATA.logs.slice(0,6).map((x,i)=>logCard(x,i)).join('')}</div></div><div class="section"><h2>ARCHIVE STATUS</h2><div class="grid"><div class="card"><b>${DATA.logs.length} LOGBOOKS</b><p>Documented supernatural events currently indexed.</p></div><div class="card"><b>${state.read.length} READ</b><p>Your archive reading progress is stored locally.</p></div><div class="card"><b>${state.favorites.length} FAVORITES</b><p>Marked entries for quick return.</p></div><div class="card"><b>${state.posts.length} PERSONAL POSTS</b><p>Your own observations added to the archive.</p></div><div class="card"><b>${state.game.secretRoomsUnlocked} SECRET ROOMS</b><p>Unauthorized Deck Ø compartments currently manifested.</p><button class="action" onclick="openSecretDeck()">ENTER DECK Ø</button></div><div class="card"><b>DAY ${state.game.day}</b><p>Continue the supernatural investigation cycle.</p><button class="action" onclick="openInvestigation()">INVESTIGATE</button></div></div></div></main>`,false);
@@ -775,6 +771,17 @@ function startMatrixBackground(){
   if(matrixNetTimer)return;
   matrixNetTimer=setInterval(tickMatrixNetwork,1100);
 }
+
+let matrixBackgroundMode=false;
+function toggleMatrixBackgroundFromPanel(){
+  matrixBackgroundMode=!matrixBackgroundMode;
+  toggleMatrixRain(matrixBackgroundMode);
+  document.querySelectorAll('.rMatrixToggle button').forEach(b=>{
+    b.classList.toggle('active',matrixBackgroundMode);
+    b.textContent=matrixBackgroundMode?'MATRIX BACKGROUND // ON':'MATRIX BACKGROUND';
+  });
+}
+
 function toggleMatrixRain(force){
   let ov=document.getElementById('matrixRainOverlay');if(!ov)return;
   let on=typeof force==='boolean'?force:!ov.classList.contains('active');
@@ -1556,7 +1563,7 @@ function starfield(){
 starfield();goHome();renderRPanel();startMatrixBackground();
 </script>
 
-<div id="rPanel" class="rPanel">
+<div id="rPanel" class="rPanel"><div class="rMatrixToggle"><button id="rMatrixBgToggle" onclick="toggleMatrixBackgroundFromPanel()">MATRIX BACKGROUND</button></div>
   <section class="rDrawer" id="rDrawer1">
     <button class="rTab" onclick="toggleRDrawer(1)">PROBLEM</button>
     <div class="rDrawerBody" id="rDrawerBody1"></div>
