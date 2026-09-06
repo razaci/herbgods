@@ -213,6 +213,16 @@ function renderSelector(){
 }
 
 function renderDeck(){
+  const deckSection=$('deck');
+  const deckHeader=$('deckAnchor');
+  if(path.length<4){
+    if(deckSection) deckSection.style.display='none';
+    if(deckHeader) deckHeader.style.display='none';
+    return;
+  }
+  if(deckSection) deckSection.style.display='grid';
+  if(deckHeader) deckHeader.style.display='flex';
+
   const arr=visibleHerbs();
   $('count').textContent=arr.length+' herb'+(arr.length===1?'':'s');
   $('deck').innerHTML=arr.map(h=>{
