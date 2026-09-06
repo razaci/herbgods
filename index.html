@@ -58,6 +58,17 @@ linear-gradient(180deg,rgba(1,8,5,.82),rgba(1,8,5,.96)),url('data:image/png;base
  .progress{grid-template-columns:1fr 1fr}.choice{min-width:155px}.deck{grid-template-columns:1fr 1fr;gap:9px}
  .card h4{font-size:16px}.cardBody{padding:9px}.cardActions{grid-template-columns:1fr}.introPanel h1{font-size:32px}
 }
+
+.resultPanel{width:100%;min-width:100%;padding:4px}
+.resultTitle{color:#ffe29a;font-weight:900;letter-spacing:.08em;font-size:12px;margin:4px 0 10px}
+.resultCards{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;width:100%}
+.miniResultCard{display:grid;grid-template-columns:74px 1fr;gap:10px;align-items:center;background:#0a130d;border:1px solid #69562e;border-radius:14px;padding:8px;box-shadow:0 6px 16px #0006}
+.miniResultCard img{width:74px;height:96px;object-fit:cover;border-radius:10px;border:1px solid #826a35}
+.miniInfo b{display:block;color:#ffe6a7;font:700 16px Georgia,serif}.miniInfo small{display:block;color:#9eb1a3;margin-top:4px}
+.miniActions{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.miniActions .openBtn,.miniActions .amazon{display:block;text-align:center;padding:9px;border-radius:10px;text-decoration:none;font-weight:900}
+@media(max-width:520px){.resultCards{grid-template-columns:1fr}.miniResultCard{grid-template-columns:68px 1fr}.miniResultCard img{width:68px;height:88px}}
+
 </style>
 </head>
 <body>
@@ -161,7 +172,7 @@ function visibleHerbs(){
 }
 
 function renderProgress(){
-  [0,1,2,3].forEach(i=>{ const el=$('s'+i); el.className='step'; if(i<path.length) el.classList.add('done'); else if(i===Math.min(path.length,4)) el.classList.add('active'); });
+  [0,1,2,3,4].forEach(i=>{ const el=$('s'+i); if(!el)return; el.className='step'; if(i<path.length) el.classList.add('done'); else if(i===Math.min(path.length,4)) el.classList.add('active'); });
 }
 
 function renderSelector(){
@@ -172,7 +183,22 @@ function renderSelector(){
   $('selectorTitle').textContent=titles[Math.min(path.length,4)];
 
   if(path.length>=4 || !n || Array.isArray(n)){
-    $('choices').innerHTML='<div class="choice"><b>Selection complete</b><small>'+visibleHerbs().length+' matching herbs are in the deck below.</small></div>';
+    const results=visibleHerbs();
+    $('choices').innerHTML=
+      '<div class="resultPanel">'+
+      '<div class="resultTitle">'+results.length+' MATCHING HERB PRODUCT CARDS</div>'+
+      '<div class="resultCards">'+
+      results.map(h=>
+        '<article class="miniResultCard">'+
+          '<img src="'+h.art+'" alt="'+esc(h.name)+'">'+
+          '<div class="miniInfo"><b>'+esc(h.name)+'</b><small>'+esc(h.category||'Botanical')+'</small></div>'+
+          '<div class="miniActions">'+
+            '<button type="button" class="openBtn" data-open="'+h.id+'">OPEN CARD</button>'+
+            '<a class="amazon" href="'+esc(h.amazon)+'" target="_blank" rel="noopener">AMAZON</a>'+
+          '</div>'+
+        '</article>'
+      ).join('')+
+      '</div></div>';
     renderDeck();
     return;
   }
@@ -181,7 +207,7 @@ function renderSelector(){
   $('choices').innerHTML=keys.map(k=>{
     const nextNode=nodeAt([...path,k]);
     const c=Array.isArray(nextNode)?nextNode.length:herbs.filter(h=>Array.isArray(h.reversePaths)&&h.reversePaths.some(p=>[...path,k].every((v,i)=>p[i]===v))).length;
-    return '<button type="button" class="choice" data-choice="'+esc(k)+'"><b>'+esc(k)+'</b><small>'+c+' matching herbs</small></button>';
+    return '<button type="button" class="choice" data-choice="'+esc(k)+'"><b>'+esc(k)+'</b><small>'+c+' linked herb cards · tap to view products</small></button>';
   }).join('');
   renderDeck();
 }
