@@ -285,7 +285,7 @@ linear-gradient(180deg,rgba(1,8,5,.82),rgba(1,8,5,.96)),url('data:image/png;base
 
   <div class="gameColumns">
     <section class="gamePanel">
-      <h3>CHOOSE 1 OF 2 HERBS <span id="pickCount">PICK 1</span></h3>
+      <h3>CHOOSE 1 OF 2 HERBS · TWO FIXED CHOICES <span id="pickCount">PICK 1</span></h3>
       <p>Exactly TWO herb cards are dealt for each case. Pick the better match.</p>
       <div id="gameHand" class="gameHand"></div>
       <section id="rewardMenu" class="rewardMenu">
@@ -589,9 +589,13 @@ let quizWrong=0,lastReward='—';
 let rewardTokens=0,rewardShards=0,rewardXp=0;
 let resolvingAnswer=false;
 let selectedDockHerbId=null;
+let lockedPatientHand=[];
 const patientNames=['Nova Reed','Orion Vale','Mira Moss','Sol Rowan','Luna Sage','Atlas Fern','Iris Bloom','Cedar Voss','Lyra Root','Juno Green'];
 function gRand(a){return a[Math.floor(Math.random()*a.length)]}
 function newGameCase(){
+  lockedPatientHand=[];
+  currentHand=[];
+
   const shuffled=[...gameAilments].sort(()=>Math.random()-.5);
   const probs=[]; const used=new Set();
   for(const a of shuffled){ if(!used.has(a.ailment)){probs.push(a);used.add(a.ailment)} if(probs.length>=3+Math.floor(Math.random()*3))break; }
@@ -618,23 +622,30 @@ function herbGameScore(h){
   return {score,hits};
 }
 function gamePool(){
-  const ranked=herbs.map(h=>({h,...herbGameScore(h)})).sort((a,b)=>b.score-a.score);
-  const bestScore=ranked[0]?.score||0;
+  // Every patient gets exactly TWO fixed choices.
+  // The hand stays locked until the round resolves / next patient begins.
+  if(Array.isArray(lockedPatientHand) && lockedPatientHand.length===2){
+    return lockedPatientHand;
+  }
 
-  // One strong match + one decoy. Exactly TWO choices.
-  const best=ranked.filter(x=>x.score===bestScore);
-  const weaker=ranked.filter(x=>x.score<bestScore).sort(()=>Math.random()-.5);
+  const scored=herbs.map(h=>{
+    const hs=herbGameScore(h);
+    return {h,score:hs.score,hits:hs.hits};
+  }).sort((a,b)=>b.score-a.score);
 
-  const hand=[];
-  if(best.length) hand.push(best[Math.floor(Math.random()*best.length)]);
+  const best=scored[0];
+  if(!best) return [];
 
-  let second=weaker.find(x=>!hand.some(y=>y.h.id===x.h.id));
-  if(!second) second=ranked.find(x=>!hand.some(y=>y.h.id===x.h.id));
-  if(second) hand.push(second);
+  // Pick a believable but weaker decoy. Never choose the same herb.
+  let decoy=scored.find(x=>String(x.h.id)!==String(best.h.id) && x.score<best.score);
+  if(!decoy) decoy=scored.find(x=>String(x.h.id)!==String(best.h.id));
+  if(!decoy) return [best];
 
-  return hand.sort(()=>Math.random()-.5).slice(0,2);
+  // Randomize only ONCE when the patient starts, so correct isn't always left/right.
+  lockedPatientHand=Math.random()<0.5 ? [best,decoy] : [decoy,best];
+  return lockedPatientHand;
 }
-let currentHand=[];
+
 function renderGameHand(){
   currentHand=gamePool().slice(0,2);
   const scores=currentHand.map(x=>herbGameScore(x.h).score);
@@ -1254,6 +1265,7 @@ document.addEventListener('click',function(e){
   if(herbBtn){
     e.preventDefault();
     e.stopPropagation();
+    e.stopImmediatePropagation();
     selectGameHerb(herbBtn.dataset.gameherb);
     return;
   }
