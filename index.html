@@ -87,10 +87,10 @@ linear-gradient(180deg,rgba(1,8,5,.82),rgba(1,8,5,.96)),url('data:image/png;base
 .caseGrid{display:grid;grid-template-columns:1fr 210px;gap:12px}.caseCard{display:grid;grid-template-columns:90px 1fr;gap:12px;padding:14px;border:1px solid #49604e;border-radius:16px;background:#0a160f}.patientAvatar{height:90px;display:grid;place-items:center;border-radius:50%;background:radial-gradient(circle,#5fffd0,#123b30 55%,#06100b 70%);font-size:38px;color:#fff4b3}.caseCard h3{margin:2px 0 7px;color:#fff0b1}.caseProblems{display:flex;flex-wrap:wrap;gap:5px}.caseProblems span{padding:5px 7px;border:1px solid #735e31;border-radius:999px;color:#ffe2a0;font-size:10px;background:#18150b}.caseBody{margin-top:7px;color:#82dcb8;font-size:11px}
 .caseActions{display:flex;flex-direction:column;gap:8px}.caseActions button,.craftBtn{padding:12px;border-radius:12px;border:1px solid #7a6333;background:#162019;color:#ffe5a4;font-weight:1000}.caseActions .cureAll{background:linear-gradient(180deg,#ffe98c,#d79b22);color:#211500;border-color:#fff0ad;box-shadow:0 0 18px #ffd65a55}.caseActions small{color:#819087;font-size:9px}
 .gameColumns{display:grid;grid-template-columns:1.35fr .65fr;gap:12px;margin-top:12px}.gamePanel{padding:13px;border:1px solid #405246;border-radius:16px;background:#07100bd9}.gamePanel h3{margin:0 0 7px;color:#ffe09a}.gamePanel p{color:#91a296;font-size:11px}
-.gameHand{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-height:none;overflow:visible}.handCard{padding:7px;border:1px solid #435548;border-radius:12px;background:#0d1811;cursor:pointer}.handCard.selected{border-color:#ffe070;box-shadow:0 0 14px #ffe07055}.handCard img{width:100%;height:150px;object-fit:cover;border-radius:8px}.handCard b{display:block;color:#ffe6aa;font-size:11px;margin-top:4px}.handCard small{color:#8fa096;font-size:9px}
+.gameHand{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;max-width:560px;margin:0 auto}.handCard{padding:8px;border:2px solid #435548;border-radius:14px;background:#0d1811;cursor:pointer;color:inherit;text-align:left;min-height:0}.handCard.selected{border-color:#ffe070;box-shadow:0 0 18px #ffe07088;background:#201c0d}.handCard img{width:100%;height:120px;object-fit:cover;border-radius:9px}.handCard b{display:block;color:#ffe6aa;font-size:14px;margin-top:6px;text-align:center}.handCard small{display:block;color:#8fa096;font-size:9px;text-align:center;margin-top:3px}
 .formulaSlots{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:10px 0}.formulaSlots div{min-height:65px;display:grid;place-items:center;text-align:center;border:1px dashed #665a3b;border-radius:10px;color:#8c988f;font-size:10px;padding:4px}.gamePanel label{display:block;color:#a9b7ad;font-size:10px}.gamePanel select{width:100%;margin:5px 0 8px;padding:9px;background:#0b150f;color:#fff0b0;border:1px solid #4b5d50;border-radius:9px}.craftBtn{width:100%}.gameResult{margin-top:9px;padding:10px;border-radius:10px;background:#0d1710;color:#bdc9c0;font-size:11px}.gameResult.win{border:1px solid #ffd76d;color:#fff0b2}
 .upgradeGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:7px}.upgradeItem{padding:9px;border:1px solid #3e5044;border-radius:10px;background:#0c1610;color:#c7d3ca;font-size:10px}.upgradeItem b{display:block;color:#ffe09a}.upgradeItem button{margin-top:6px;width:100%;padding:6px;border-radius:7px;border:1px solid #66562f;background:#171d13;color:#ffe3a2;font-weight:800;font-size:9px}
-@media(max-width:760px){.caseGrid,.gameColumns{grid-template-columns:1fr}.gameHand{grid-template-columns:repeat(3,1fr)}.gameHead{display:block}.gameStats{margin-top:9px}.gameFlow{grid-template-columns:repeat(5,minmax(55px,1fr));overflow:auto}}
+@media(max-width:760px){.caseGrid,.gameColumns{grid-template-columns:1fr}.gameHand{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.handCard img{height:96px}.gameHead{display:block}.gameStats{margin-top:9px}.gameFlow{grid-template-columns:repeat(5,minmax(55px,1fr));overflow:auto}}
 
 </style>
 </head>
@@ -150,8 +150,8 @@ linear-gradient(180deg,rgba(1,8,5,.82),rgba(1,8,5,.96)),url('data:image/png;base
 
   <div class="gameColumns">
     <section class="gamePanel">
-      <h3>BOTANICAL HAND <span id="pickCount">PICK 1</span></h3>
-      <p>Only a few herb cards are dealt. Pick the single card that best matches the fictional case.</p>
+      <h3>CHOOSE 1 HERB <span id="pickCount">PICK 1</span></h3>
+      <p>Two herb cards are dealt. Pick the better match.</p>
       <div id="gameHand" class="gameHand"></div>
     </section>
     <section class="gamePanel">
@@ -160,8 +160,8 @@ linear-gradient(180deg,rgba(1,8,5,.82),rgba(1,8,5,.96)),url('data:image/png;base
       <label>CARD ACTION
         <select id="craftType"><option>Match Case</option><option>Study Card</option><option>Botanical Lore Check</option></select>
       </label>
-      <button id="craftBtn" class="craftBtn" type="button">PLAY THIS CARD</button>
-      <div id="gameResult" class="gameResult">Choose the best card from the small hand.</div>
+      <button id="craftBtn" class="craftBtn" type="button">USE THIS HERB</button>
+      <div id="gameResult" class="gameResult">Tap one of the two herb cards, then press USE THIS HERB.</div>
     </section>
   </div>
 
@@ -367,7 +367,7 @@ function newGameCase(){
   document.getElementById('caseProblems').innerHTML=probs.map(x=>'<span>'+esc(x.ailment)+'</span>').join('');
   document.getElementById('caseBody').textContent=[...new Set(probs.map(x=>x.region+' → '+x.part))].join(' · ');
   renderGameHand(); renderFormula(); document.getElementById('gameResult').className='gameResult';
-  document.getElementById('gameResult').textContent='Choose the best card from the small hand.';
+  document.getElementById('gameResult').textContent='Tap one of the two herb cards, then press USE THIS HERB.';
 }
 function herbGameScore(h){
   let score=0, hits=[];
@@ -385,7 +385,7 @@ function gamePool(){
 let currentHand=[];
 function renderGameHand(){
   currentHand=gamePool();
-  document.getElementById('gameHand').innerHTML=currentHand.map(x=>'<div class="handCard '+(selectedGameHerbs.some(h=>h.id===x.h.id)?'selected':'')+'" data-gameherb="'+x.h.id+'"><img src="'+x.h.art+'"><b>'+esc(x.h.name)+'</b><small>'+x.score+' current problem match'+(x.score===1?'':'es')+'</small></div>').join('');
+  document.getElementById('gameHand').innerHTML=currentHand.map(x=>'<button type="button" class="handCard '+(selectedGameHerbs.some(h=>h.id===x.h.id)?'selected':'')+'" data-gameherb="'+x.h.id+'"><img src="'+x.h.art+'"><b>'+esc(x.h.name)+'</b><small>TAP TO CHOOSE</small></button>').join('');
   document.getElementById('pickCount').textContent=selectedGameHerbs.length+' / 3';
 }
 function renderFormula(){
