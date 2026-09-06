@@ -148,6 +148,12 @@ linear-gradient(180deg,rgba(1,8,5,.82),rgba(1,8,5,.96)),url('data:image/png;base
 .nextPatientBtn2.show{display:block!important;animation:nextPulse2 .8s ease-in-out infinite alternate}
 @keyframes nextPulse2{from{box-shadow:0 0 5px #ffe07033}to{box-shadow:0 0 24px #ffe070aa}}
 
+
+.hintHerbBtn{padding:12px;border-radius:12px;border:2px solid #d8b63e;background:#17170c;color:#ffe87c;font-weight:1000;box-shadow:0 0 10px #ffd83d33}
+.handCard.correctHint{border:4px solid #ffe600!important;outline:3px solid #fff59a!important;outline-offset:3px;box-shadow:0 0 12px #ffe600,0 0 32px #ffe600cc,0 0 58px #ffe60077!important;animation:correctHerbFlash .45s ease-in-out 6 alternate;transform:translateY(-5px) scale(1.025)}
+.handCard.correctHint:after{content:"✓ CORRECT HERB";position:absolute;left:7px;right:7px;top:7px;padding:6px 4px;border-radius:7px;background:#ffe600;color:#211900;font-size:9px;font-weight:1000;text-align:center;z-index:8;box-shadow:0 2px 10px #0008}
+@keyframes correctHerbFlash{from{filter:brightness(1)}to{filter:brightness(1.65)}}
+
 </style>
 </head>
 <body>
@@ -210,6 +216,7 @@ linear-gradient(180deg,rgba(1,8,5,.82),rgba(1,8,5,.96)),url('data:image/png;base
     <div class="caseActions">
       <button id="newCaseBtn" type="button">NEW CASE</button>
       <button id="cureAllBtn" class="cureAll" type="button">⚡ CURE ALL</button>
+      <button id="hintHerbBtn" class="hintHerbBtn" type="button">💡 SHOW CORRECT HERB</button>
       <small>“Cure All” is a fictional game shortcut: it automatically finds the strongest matching herb cards and shows why they scored well.</small>
     </div>
   </div>
@@ -655,6 +662,26 @@ function cureAllGame(){
   renderFormula();
   evaluateFormula(true);
 }
+
+function showCorrectHerbHint(){
+  if(selectionState.resolved)return;
+  if(!currentHand.length)return;
+  const scored=currentHand.map(x=>({h:x.h,score:herbGameScore(x.h).score})).sort((a,b)=>b.score-a.score);
+  const bestScore=scored[0].score;
+  const best=scored.find(x=>x.score===bestScore);
+  document.querySelectorAll('[data-gameherb]').forEach(btn=>{
+    btn.classList.remove('correctHint');
+    if(String(btn.dataset.gameherb)===String(best.h.id)){
+      void btn.offsetWidth;
+      btn.classList.add('correctHint');
+      setTimeout(()=>btn.classList.remove('correctHint'),3200);
+    }
+  });
+  const result=document.getElementById('gameResult');
+  result.className='gameResult';
+  result.innerHTML='<b>💡 HERB GOD HINT</b><br>The yellow flashing card is the strongest fictional match for this patient.';
+}
+
 function updateGameStats(){document.getElementById('gCredits').textContent=gameCredits;document.getElementById('gWins').textContent=gameWins}
 function renderGameExtras(){
  const garden=['Moon Garden','Solar Greenhouse','Mythic Seed Vault','Hydroponic Bay'];
@@ -668,6 +695,7 @@ document.addEventListener('click',e=>{
 });
 document.getElementById('newCaseBtn').onclick=newGameCase;
 document.getElementById('cureAllBtn').onclick=cureAllGame;
+document.getElementById('hintHerbBtn').onclick=showCorrectHerbHint;
 const np2=document.getElementById('nextPatientBtn2'); if(np2)np2.onclick=newGameCase;
 document.getElementById('craftBtn').onclick=()=>evaluateFormula(false);
 renderGameExtras();newGameCase();updateGameStats();
