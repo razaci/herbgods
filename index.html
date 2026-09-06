@@ -110,6 +110,14 @@ linear-gradient(180deg,rgba(1,8,5,.82),rgba(1,8,5,.96)),url('data:image/png;base
 .gameResult.win{animation:healPulse .65s ease}@keyframes healPulse{50%{box-shadow:0 0 35px #ffe070aa;transform:scale(1.01)}}
 @media(max-width:760px){.cinemaHero,.heroShade{min-height:390px}.cinemaHero h1{font-size:27px}.campaignStrip{grid-template-columns:repeat(2,1fr)}}
 
+
+.formulaSlots{display:block;margin:10px 0}
+.selectedHeroCard{display:grid;grid-template-columns:90px 1fr;gap:10px;align-items:center;padding:10px;border:1px solid #7b6434;border-radius:14px;background:linear-gradient(180deg,#121c14,#080f0a);box-shadow:0 0 18px #ffe07022}
+.selectedHeroCard img{width:90px;height:110px;object-fit:cover;border-radius:10px;border:1px solid #7f6d3e}
+.selectedHeroCard b{display:block;color:#ffe5a5;font-size:15px}.selectedHeroCard small{display:block;color:#8da197;margin-top:4px;font-size:9px}.selectedHeroCard .selMatches{margin-top:6px;color:#bfe6cd;font-size:9px;line-height:1.4}
+.selectedCardActions{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin:9px 0}.selectedCardActions button{padding:9px;border-radius:9px;border:1px solid #4c5e50;background:#0d1710;color:#dfeadf;font-size:9px;font-weight:900}.selectedCardActions button:first-child{background:linear-gradient(#ffe27a,#c28a20);color:#231600;border-color:#fff0a6}.selectedCardActions button.active{border-color:#ffe174;box-shadow:0 0 14px #ffe17455}.selectedEmpty{padding:18px;text-align:center;border:1px dashed #5b604c;border-radius:12px;color:#7f8e84;font-size:10px}
+@media(max-width:760px){.selectedHeroCard{grid-template-columns:72px 1fr}.selectedHeroCard img{width:72px;height:92px}.selectedCardActions{grid-template-columns:1fr 1fr}}
+
 </style>
 </head>
 <body>
@@ -184,7 +192,15 @@ linear-gradient(180deg,rgba(1,8,5,.82),rgba(1,8,5,.96)),url('data:image/png;base
     </section>
     <section class="gamePanel">
       <h3>SELECTED HERB CARD</h3>
-      <div id="formulaSlots" class="formulaSlots"><div>EMPTY</div><div>EMPTY</div><div>EMPTY</div></div>
+      <div id="formulaSlots" class="formulaSlots"><div class="selectedEmpty">SELECT A HERB CARD</div></div>
+      <div id="selectedCardActions" class="selectedCardActions">
+        <button type="button" data-selaction="use">USE ON PATIENT</button>
+        <button type="button" data-selaction="inspect">INSPECT CARD</button>
+        <button type="button" data-selaction="compare">COMPARE MATCH</button>
+        <button type="button" data-selaction="formula">ADD TO FORMULA</button>
+        <button type="button" data-selaction="favorite">☆ FAVORITE</button>
+        <button type="button" data-selaction="ency">OPEN ENCYCLOPEDIA</button>
+      </div>
       <label>CARD ACTION
         <select id="craftType"><option>Match Case</option><option>Study Card</option><option>Botanical Lore Check</option></select>
       </label>
@@ -446,8 +462,19 @@ function renderGameHand(){
   document.getElementById('pickCount').textContent=selectedGameHerbs.length+' / 3';
 }
 function renderFormula(){
-  document.getElementById('formulaSlots').innerHTML=[0,1,2].map(i=>'<div>'+(selectedGameHerbs[i]?esc(selectedGameHerbs[i].name):'EMPTY')+'</div>').join('');
-  document.getElementById('pickCount').textContent=selectedGameHerbs.length+' / 3';
+  const h=selectedGameHerbs[0];
+  const box=document.getElementById('formulaSlots');
+  if(!h){
+    box.innerHTML='<div class="selectedEmpty">SELECT A HERB CARD</div>';
+    document.getElementById('pickCount').textContent='PICK 1';
+    return;
+  }
+  const gs=herbGameScore(h);
+  const matchText=gs.hits.length?gs.hits.slice(0,3).map(esc).join(' · '):'No direct problem-tag match shown';
+  box.innerHTML='<div class="selectedHeroCard" data-open="'+h.id+'">'+
+    '<img src="'+h.art+'"><div><b>'+esc(h.name)+'</b><small>'+esc(h.category||'Botanical Card')+'</small>'+
+    '<div class="selMatches">'+matchText+'</div></div></div>';
+  document.getElementById('pickCount').textContent='SELECTED';
 }
 function selectGameHerb(id){
   const h=herbs.find(x=>String(x.id)===String(id)); if(!h)return;
@@ -528,6 +555,51 @@ function updateCosmicCampaign(){
   const track=document.getElementById('planetTrack');if(track)track.innerHTML=cosmicPlanets.map((p,i)=>'<i class="planetDot '+(i<=pi?'on':'')+'"></i>').join('');
 }
 document.getElementById('jumpToCase').onclick=()=>document.getElementById('gameCenter').scrollIntoView({behavior:'smooth'});
+
+
+function handleSelectedAction(action){
+  const h=selectedGameHerbs[0];
+  const result=document.getElementById('gameResult');
+  if(!h){result.textContent='Select one of the two herb cards first.';return;}
+  document.querySelectorAll('[data-selaction]').forEach(b=>b.classList.toggle('active',b.dataset.selaction===action));
+  const gs=herbGameScore(h);
+  if(action==='use'){ evaluateFormula(false); return; }
+  if(action==='inspect'){
+    openHerb(h.id);
+    return;
+  }
+  if(action==='compare'){
+    const other=currentHand.find(x=>x.h.id!==h.id);
+    const otherScore=other?herbGameScore(other.h):null;
+    result.className='gameResult';
+    result.innerHTML='<b>MATCH COMPARISON</b><br>'+esc(h.name)+': '+gs.score+' case match'+(gs.score===1?'':'es')+
+      (otherScore?'<br>'+esc(other.h.name)+': '+otherScore.score+' case match'+(otherScore.score===1?'':'es'):'');
+    return;
+  }
+  if(action==='formula'){
+    result.className='gameResult win';
+    result.innerHTML='<b>FORMULA SLOT READY</b><br>'+esc(h.name)+' has been placed into the fictional formula chamber.';
+    return;
+  }
+  if(action==='favorite'){
+    const favs=JSON.parse(localStorage.getItem('herbGodFavs')||'[]');
+    if(!favs.includes(h.id))favs.push(h.id);
+    localStorage.setItem('herbGodFavs',JSON.stringify(favs));
+    result.className='gameResult';
+    result.innerHTML='<b>★ FAVORITED</b><br>'+esc(h.name)+' was added to your collection favorites.';
+    return;
+  }
+  if(action==='ency'){
+    const p=document.getElementById('encyPanel');
+    if(p){p.classList.add('open');document.getElementById('encyToggle').textContent='CLOSE HERB ENCYCLOPEDIA';}
+    openHerb(h.id);
+    return;
+  }
+}
+document.addEventListener('click',e=>{
+  const a=e.target.closest('[data-selaction]');
+  if(a){handleSelectedAction(a.dataset.selaction);}
+});
 
 updateCosmicCampaign();
 renderSelector();
