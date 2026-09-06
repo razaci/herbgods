@@ -118,6 +118,20 @@ linear-gradient(180deg,rgba(1,8,5,.82),rgba(1,8,5,.96)),url('data:image/png;base
 .selectedCardActions{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin:9px 0}.selectedCardActions button{padding:9px;border-radius:9px;border:1px solid #4c5e50;background:#0d1710;color:#dfeadf;font-size:9px;font-weight:900}.selectedCardActions button:first-child{background:linear-gradient(#ffe27a,#c28a20);color:#231600;border-color:#fff0a6}.selectedCardActions button.active{border-color:#ffe174;box-shadow:0 0 14px #ffe17455}.selectedEmpty{padding:18px;text-align:center;border:1px dashed #5b604c;border-radius:12px;color:#7f8e84;font-size:10px}
 @media(max-width:760px){.selectedHeroCard{grid-template-columns:72px 1fr}.selectedHeroCard img{width:72px;height:92px}.selectedCardActions{grid-template-columns:1fr 1fr}}
 
+
+.selectedCardActions{grid-template-columns:repeat(2,1fr)}
+.selectedCardActions button{position:relative;overflow:hidden;min-height:42px}
+.selectedCardActions button:after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 30%,#ffffff12 48%,transparent 66%);transform:translateX(-120%);transition:.35s}
+.selectedCardActions button:hover:after{transform:translateX(120%)}
+.selectedTelemetry{margin-top:10px;display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.telemetryCell{padding:8px;border:1px solid #3d5446;border-radius:9px;background:#08110c;text-align:center}
+.telemetryCell b{display:block;color:#ffe19b;font-size:12px}.telemetryCell small{color:#7f9386;font-size:8px}
+.rarityCommon{color:#cbd6cf}.rarityUncommon{color:#91e6a7}.rarityRare{color:#7bd9ff}.rarityEpic{color:#c693ff}.rarityMythic{color:#ffd56a}
+.patientPulse{animation:patientPulse .8s ease}@keyframes patientPulse{50%{filter:brightness(1.8);box-shadow:0 0 45px #62ffd0aa}}
+.healBeam{position:fixed;z-index:9998;pointer-events:none;width:10px;height:10px;border-radius:50%;background:#fff6a6;box-shadow:0 0 22px #79ffd4,0 0 50px #ffe47b;animation:beamPop .7s ease forwards}@keyframes beamPop{0%{transform:scale(.2);opacity:0}35%{transform:scale(4);opacity:1}100%{transform:scale(8);opacity:0}}
+.commandHint{padding:7px 9px;margin-top:7px;border-left:3px solid #66e6d6;background:#09150f;color:#a9c0b2;font-size:9px}
+@media(max-width:760px){.selectedTelemetry{grid-template-columns:repeat(3,1fr)}.selectedCardActions button{font-size:8px}}
+
 </style>
 </head>
 <body>
@@ -194,13 +208,18 @@ linear-gradient(180deg,rgba(1,8,5,.82),rgba(1,8,5,.96)),url('data:image/png;base
       <h3>SELECTED HERB CARD</h3>
       <div id="formulaSlots" class="formulaSlots"><div class="selectedEmpty">SELECT A HERB CARD</div></div>
       <div id="selectedCardActions" class="selectedCardActions">
-        <button type="button" data-selaction="use">USE ON PATIENT</button>
-        <button type="button" data-selaction="inspect">INSPECT CARD</button>
-        <button type="button" data-selaction="compare">COMPARE MATCH</button>
-        <button type="button" data-selaction="formula">ADD TO FORMULA</button>
+        <button type="button" data-selaction="use">⚡ USE ON PATIENT</button>
+        <button type="button" data-selaction="inspect">🔎 INSPECT CARD</button>
+        <button type="button" data-selaction="compare">⚖ COMPARE MATCH</button>
+        <button type="button" data-selaction="formula">⚗ ADD TO FORMULA</button>
         <button type="button" data-selaction="favorite">☆ FAVORITE</button>
-        <button type="button" data-selaction="ency">OPEN ENCYCLOPEDIA</button>
+        <button type="button" data-selaction="ency">📖 ENCYCLOPEDIA</button>
+        <button type="button" data-selaction="lore">✦ GOD LORE</button>
+        <button type="button" data-selaction="body">◎ BODY TARGET</button>
+        <button type="button" data-selaction="scan">⌁ MATCH SCAN</button>
+        <button type="button" data-selaction="upgrade">⬆ CARD UPGRADE</button>
       </div>
+      <div id="selectedTelemetry" class="selectedTelemetry"></div>
       <label>CARD ACTION
         <select id="craftType"><option>Match Case</option><option>Study Card</option><option>Botanical Lore Check</option></select>
       </label>
@@ -464,16 +483,26 @@ function renderGameHand(){
 function renderFormula(){
   const h=selectedGameHerbs[0];
   const box=document.getElementById('formulaSlots');
+  const tele=document.getElementById('selectedTelemetry');
   if(!h){
     box.innerHTML='<div class="selectedEmpty">SELECT A HERB CARD</div>';
+    if(tele)tele.innerHTML='';
     document.getElementById('pickCount').textContent='PICK 1';
     return;
   }
   const gs=herbGameScore(h);
+  const pct=gameCase&&gameCase.problems.length?Math.round(gs.score/gameCase.problems.length*100):0;
+  const rarity=(h.rarity||['Common','Uncommon','Rare','Epic','Mythic'][Math.abs(Number(h.id)||0)%5]);
   const matchText=gs.hits.length?gs.hits.slice(0,3).map(esc).join(' · '):'No direct problem-tag match shown';
   box.innerHTML='<div class="selectedHeroCard" data-open="'+h.id+'">'+
-    '<img src="'+h.art+'"><div><b>'+esc(h.name)+'</b><small>'+esc(h.category||'Botanical Card')+'</small>'+
-    '<div class="selMatches">'+matchText+'</div></div></div>';
+    '<img src="'+h.art+'"><div><b>'+esc(h.name)+'</b><small>'+esc(h.category||'Botanical Card')+
+    ' · <span class="rarity'+rarity+'">'+esc(rarity)+'</span></small>'+
+    '<div class="selMatches">'+matchText+'</div>'+
+    '<div class="commandHint">Selected card ready. Choose an action below.</div></div></div>';
+  if(tele)tele.innerHTML=
+    '<div class="telemetryCell"><b>'+pct+'%</b><small>MATCH</small></div>'+
+    '<div class="telemetryCell"><b>'+gs.score+'</b><small>HITS</small></div>'+
+    '<div class="telemetryCell"><b>'+esc(rarity)+'</b><small>RARITY</small></div>';
   document.getElementById('pickCount').textContent='SELECTED';
 }
 function selectGameHerb(id){
@@ -504,6 +533,8 @@ function evaluateFormula(auto=false){
   }
   if(auto)expl='<b>⚡ CURE ALL — FICTIONAL AUTO-SOLVE</b><br>The ship picked the highest-scoring card from this hand and shows its matching clues.<br><br>'+expl;
   const el=document.getElementById('gameResult');el.innerHTML=expl;el.className='gameResult win';
+  const av=document.getElementById('patientAvatar'); if(av){av.classList.remove('patientPulse');void av.offsetWidth;av.classList.add('patientPulse');}
+  const beam=document.createElement('div');beam.className='healBeam';beam.style.left=(window.innerWidth/2)+'px';beam.style.top=(window.innerHeight/2)+'px';document.body.appendChild(beam);setTimeout(()=>beam.remove(),750);
 }
 function cureAllGame(){
   if(!currentHand.length)return;
@@ -593,6 +624,36 @@ function handleSelectedAction(action){
     const p=document.getElementById('encyPanel');
     if(p){p.classList.add('open');document.getElementById('encyToggle').textContent='CLOSE HERB ENCYCLOPEDIA';}
     openHerb(h.id);
+    return;
+  }
+  if(action==='lore'){
+    result.className='gameResult';
+    result.innerHTML='<b>✦ GOD LORE</b><br>'+esc(h.name)+' is cataloged aboard the apothecary as a '+esc(h.category||'botanical')+' card. '+esc(h.backstory||'Its lore is still being decoded by the Herb Gods.');
+    return;
+  }
+  if(action==='body'){
+    result.className='gameResult';
+    const paths=(h.reversePaths||[]).slice(0,4).map(p=>'Human → '+p.join(' → ')).join('<br>');
+    result.innerHTML='<b>◎ BODY TARGET</b><br>'+(paths||'Whole Body → General Botanical Archive');
+    return;
+  }
+  if(action==='scan'){
+    const ranked=currentHand.map(x=>({h:x.h,...herbGameScore(x.h)})).sort((a,b)=>b.score-a.score);
+    const rank=ranked.findIndex(x=>x.h.id===h.id)+1;
+    result.className='gameResult';
+    result.innerHTML='<b>⌁ MATCH SCAN</b><br>'+esc(h.name)+' ranks <b>#'+rank+'</b> of '+ranked.length+' cards in this hand for the current fictional case.';
+    return;
+  }
+  if(action==='upgrade'){
+    const cost=100;
+    if(gameCredits>=cost){
+      gameCredits-=cost; updateGameStats();
+      result.className='gameResult win';
+      result.innerHTML='<b>⬆ CARD UPGRADED</b><br>'+esc(h.name)+' received a cosmetic command-tier upgrade. <b>-100 credits</b>';
+    } else {
+      result.className='gameResult';
+      result.innerHTML='<b>INSUFFICIENT CREDITS</b><br>Card upgrade costs 100 credits.';
+    }
     return;
   }
 }
