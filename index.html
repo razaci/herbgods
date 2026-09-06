@@ -154,6 +154,23 @@ linear-gradient(180deg,rgba(1,8,5,.82),rgba(1,8,5,.96)),url('data:image/png;base
 .handCard.correctHint:after{content:"✓ CORRECT HERB";position:absolute;left:7px;right:7px;top:7px;padding:6px 4px;border-radius:7px;background:#ffe600;color:#211900;font-size:9px;font-weight:1000;text-align:center;z-index:8;box-shadow:0 2px 10px #0008}
 @keyframes correctHerbFlash{from{filter:brightness(1)}to{filter:brightness(1.65)}}
 
+
+#selectedCardActions,#selectionStateBar,#selectedTelemetry,#nextPatientBtn2,#hintHerbBtn,#cureAllBtn{display:none!important}
+.actionDock{margin:12px 0 18px;padding:12px;border:1px solid #5c6442;border-radius:16px;background:linear-gradient(180deg,#111a12,#070d09);box-shadow:0 0 25px #b8ff8a11,inset 0 0 24px #ffffff05}
+.dockHeader{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:9px}
+.dockHeader small{display:block;color:#73877a;font-size:8px;letter-spacing:.18em}.dockHeader b{display:block;color:#ffe59d;font-size:15px;margin-top:2px}
+#dockState{padding:5px 8px;border:1px solid #4d5a4d;border-radius:999px;color:#a7b9ac;font-size:8px;font-weight:1000}
+.dockQuick{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}.dockQuick button{padding:10px;border-radius:10px;border:1px solid #5a604a;background:#10170f;color:#dfe9df;font-size:9px;font-weight:900}
+#hintHerbDockBtn{border-color:#d8b63e;color:#ffe87c}
+.mainActionBtn{width:100%;padding:15px 12px;border-radius:12px;border:1px solid #fff0a6;background:linear-gradient(#ffe67e,#c89126);color:#221500;font-size:12px;font-weight:1000;letter-spacing:.04em;box-shadow:0 0 16px #ffe07044;margin-bottom:8px}
+.mainActionBtn:disabled{filter:grayscale(.8);opacity:.45;box-shadow:none}.mainActionBtn.ready{animation:mainPulse .8s ease-in-out infinite alternate}
+@keyframes mainPulse{from{box-shadow:0 0 8px #ffe07033}to{box-shadow:0 0 24px #ffe070aa}}
+.moreOptionsBtn{width:100%;padding:9px;border-radius:9px;border:1px solid #36463b;background:#09120d;color:#a9b8ae;font-size:9px;font-weight:900}
+.moreOptionsPanel{display:none;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}.moreOptionsPanel.open{display:grid}.moreOptionsPanel button{padding:8px 5px;border-radius:8px;border:1px solid #34473a;background:#0b140e;color:#d3dfd6;font-size:8px;font-weight:800}
+.dockSelectedCard{margin-top:9px}.dockSelectedCard:empty{display:none}.dockMini{display:grid;grid-template-columns:54px 1fr;gap:8px;align-items:center;padding:8px;border:1px solid #3f5143;border-radius:10px;background:#08110b}.dockMini img{width:54px;height:66px;object-fit:cover;border-radius:7px}.dockMini b{display:block;color:#ffe2a0;font-size:11px}.dockMini small{display:block;color:#809085;font-size:8px;margin-top:3px}
+.dockResult{margin-top:9px;padding:9px;border:1px solid #29392f;border-radius:9px;background:#060d08;color:#9daf9f;font-size:9px;line-height:1.4}
+@media(max-width:760px){.moreOptionsPanel{grid-template-columns:repeat(2,1fr)}}
+
 </style>
 </head>
 <body>
@@ -226,6 +243,34 @@ linear-gradient(180deg,rgba(1,8,5,.82),rgba(1,8,5,.96)),url('data:image/png;base
       <h3>CHOOSE 1 OF 2 HERBS <span id="pickCount">PICK 1</span></h3>
       <p>Exactly TWO herb cards are dealt for each case. Pick the better match.</p>
       <div id="gameHand" class="gameHand"></div>
+      <section id="actionDock" class="actionDock">
+        <div class="dockHeader">
+          <div>
+            <small>ACTION DOCK</small>
+            <b id="dockSelectedName">SELECT A HERB</b>
+          </div>
+          <span id="dockState">WAITING</span>
+        </div>
+        <div class="dockQuick">
+          <button id="hintHerbDockBtn" type="button">💡 SHOW CORRECT HERB</button>
+          <button id="cureAllDockBtn" type="button">⚡ CURE ALL</button>
+        </div>
+        <button id="mainActionBtn" class="mainActionBtn" type="button" disabled>SELECT ONE OF THE TWO HERBS</button>
+        <button id="moreOptionsBtn" class="moreOptionsBtn" type="button">MORE HERB OPTIONS ▾</button>
+        <div id="moreOptionsPanel" class="moreOptionsPanel">
+          <button type="button" data-selaction="inspect">🔎 INSPECT</button>
+          <button type="button" data-selaction="compare">⚖ COMPARE</button>
+          <button type="button" data-selaction="formula">⚗ FORMULA</button>
+          <button type="button" data-selaction="favorite">☆ FAVORITE</button>
+          <button type="button" data-selaction="lore">✦ GOD LORE</button>
+          <button type="button" data-selaction="body">◎ BODY TARGET</button>
+          <button type="button" data-selaction="scan">⌁ MATCH SCAN</button>
+          <button type="button" data-selaction="upgrade">⬆ UPGRADE</button>
+          <button type="button" data-selaction="ency">📖 ENCYCLOPEDIA</button>
+        </div>
+        <div id="dockSelectedCard" class="dockSelectedCard"></div>
+        <div id="dockResult" class="dockResult">Choose one herb card to begin.</div>
+      </section>
     </section>
     <section class="gamePanel">
       <h3>SELECTED HERB CARD</h3>
@@ -472,6 +517,7 @@ function newGameCase(){
   gameCase={name:gRand(patientNames),problems:probs};
   selectedGameHerbs=[];
   selectionState={phase:'choosing',selectedId:null,resolved:false,formulaIds:[]};
+  const dr=document.getElementById('dockResult'); if(dr){dr.dataset.locked='';dr.innerHTML='Choose one herb card to begin.';}
   const np=document.getElementById('nextPatientBtn2'); if(np){np.classList.remove('show');np.style.display='none';}
   document.getElementById('patientName').textContent=gameCase.name;
   document.getElementById('patientAvatar').textContent=['✦','☿','♁','✧','◉'][Math.floor(Math.random()*5)];
@@ -572,6 +618,50 @@ function selectGameHerb(id){
   updateSelectionStateUI();
 }
 
+
+function updateActionDock(){
+  const h=selectedGameHerbs[0];
+  const name=document.getElementById('dockSelectedName');
+  const state=document.getElementById('dockState');
+  const main=document.getElementById('mainActionBtn');
+  const card=document.getElementById('dockSelectedCard');
+  const result=document.getElementById('dockResult');
+  if(!name||!state||!main)return;
+  if(selectionState.resolved){
+    name.textContent=h?h.name:'CASE COMPLETE';
+    state.textContent='RESOLVED';
+    main.disabled=false;
+    main.classList.add('ready');
+    main.textContent='NEXT PATIENT →';
+    if(result) result.innerHTML=document.getElementById('gameResult')?.innerHTML || 'Case complete.';
+  }else if(h){
+    const gs=herbGameScore(h);
+    name.textContent=h.name;
+    state.textContent='SELECTED';
+    main.disabled=false;
+    main.classList.add('ready');
+    main.textContent='USE '+h.name.toUpperCase()+' ON PATIENT';
+    if(card) card.innerHTML='<div class="dockMini"><img src="'+h.art+'"><div><b>'+esc(h.name)+'</b><small>'+gs.score+' current fictional case match'+(gs.score===1?'':'es')+'</small></div></div>';
+    if(result && !result.dataset.locked) result.innerHTML='Selected herb ready. Use it, ask for a hint, or open more options.';
+  }else{
+    name.textContent='SELECT A HERB';
+    state.textContent='WAITING';
+    main.disabled=true;
+    main.classList.remove('ready');
+    main.textContent='SELECT ONE OF THE TWO HERBS';
+    if(card) card.innerHTML='';
+    if(result){result.innerHTML='Choose one herb card to begin.';result.dataset.locked='';}
+  }
+}
+function syncDockResult(){
+  const gr=document.getElementById('gameResult');
+  const dr=document.getElementById('dockResult');
+  if(gr&&dr&&gr.innerHTML.trim()){
+    dr.innerHTML=gr.innerHTML;
+    dr.dataset.locked='1';
+  }
+}
+
 function updateSelectionStateUI(){
   const state=document.getElementById('selState');
   const hint=document.getElementById('selHint');
@@ -591,6 +681,7 @@ function updateSelectionStateUI(){
     hint.textContent='Choose one of the two cards.';
     if(actions)actions.classList.add('disabledActions');
   }
+  updateActionDock();
 }
 function evaluateFormula(auto=false){
   if(selectionState.resolved)return;
@@ -640,6 +731,7 @@ function evaluateFormula(auto=false){
   const el=document.getElementById('gameResult');
   el.innerHTML=expl+'<br><br><b>CASE COMPLETE — NEXT PATIENT IS READY.</b>';
   el.className='gameResult win';
+  syncDockResult();
 
   const av=document.getElementById('patientAvatar');
   if(av){av.classList.remove('patientPulse');void av.offsetWidth;av.classList.add('patientPulse');}
@@ -680,6 +772,7 @@ function showCorrectHerbHint(){
   const result=document.getElementById('gameResult');
   result.className='gameResult';
   result.innerHTML='<b>💡 HERB GOD HINT</b><br>The yellow flashing card is the strongest fictional match for this patient.';
+  syncDockResult();
 }
 
 function updateGameStats(){document.getElementById('gCredits').textContent=gameCredits;document.getElementById('gWins').textContent=gameWins}
@@ -696,6 +789,21 @@ document.addEventListener('click',e=>{
 document.getElementById('newCaseBtn').onclick=newGameCase;
 document.getElementById('cureAllBtn').onclick=cureAllGame;
 document.getElementById('hintHerbBtn').onclick=showCorrectHerbHint;
+
+const hd=document.getElementById('hintHerbDockBtn'); if(hd)hd.onclick=showCorrectHerbHint;
+const cd=document.getElementById('cureAllDockBtn'); if(cd)cd.onclick=cureAllGame;
+const md=document.getElementById('moreOptionsBtn');
+if(md)md.onclick=()=>{
+  const p=document.getElementById('moreOptionsPanel');
+  p.classList.toggle('open');
+  md.textContent=p.classList.contains('open')?'MORE HERB OPTIONS ▴':'MORE HERB OPTIONS ▾';
+};
+const ma=document.getElementById('mainActionBtn');
+if(ma)ma.onclick=()=>{
+  if(selectionState.resolved){newGameCase();return;}
+  if(selectedGameHerbs[0])evaluateFormula(false);
+};
+
 const np2=document.getElementById('nextPatientBtn2'); if(np2)np2.onclick=newGameCase;
 document.getElementById('craftBtn').onclick=()=>evaluateFormula(false);
 renderGameExtras();newGameCase();updateGameStats();
@@ -810,7 +918,7 @@ function handleSelectedAction(action){
 }
 document.addEventListener('click',e=>{
   const a=e.target.closest('[data-selaction]');
-  if(a){handleSelectedAction(a.dataset.selaction);}
+  if(a){handleSelectedAction(a.dataset.selaction);setTimeout(syncDockResult,0);}
 });
 
 updateCosmicCampaign();
